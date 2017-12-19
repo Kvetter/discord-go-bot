@@ -67,7 +67,7 @@ func request() {
 
 	req, err := http.NewRequest("GET", "https://discordapp.com/api/v6", nil)
 	// ...
-	req.Header.Set("Authorization", "Bot MzU1Nzg1MTI3MjE5MDM2MTYy.DRhloQ.XlWSs42qIAQj2pUG35Q4BIZhXBk")
+	req.Header.Set("Authorization", "Bot ")
 
 	req.Header.Set("Content-Type", "application/json")
 	// TODO: Make a configurable static variable.
