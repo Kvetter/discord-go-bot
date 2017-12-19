@@ -12,7 +12,7 @@ import (
 
 func main() {
 
-	discord, err := discordgo.New("MzU1Nzg1MTI3MjE5MDM2MTYy.DRhloQ.XlWSs42qIAQj2pUG35Q4BIZhXBk")
+	discord, err := discordgo.New("NEED TOKEN")
 	// if there is an error, we print it to the console
 	if err != nil {
 		fmt.Println("error creating Discord session,", err)
