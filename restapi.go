@@ -1,16 +1,18 @@
 package restapi
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
 )
 
-func ApiCall() {
-	req, err := http.NewRequest("GET", "https://discordapp.com/api/v6", bytes.NewBuffer(b))
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(req)
+func SpotifyConnect(name *string) {
+
+	req, err := http.NewRequest("POST", "https://accounts.spotify.com/api/token", nil)
+
+	req.Header.Set("Authorization", "...")
+
+	resp, err := client.Do(req)
+
+	fmt.Println(resp)
+	fmt.Println(err)
 }

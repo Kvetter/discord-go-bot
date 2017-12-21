@@ -1,40 +1,64 @@
 package main
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
+	"net/url"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 )
 
+type spotify struct {
+	Key    string `json:"access_token"`
+	Typ    string `json:"token_type"`
+	Expire int    `json:"expires_in"`
+	Scope  string `json:"scope"`
+}
+
+// Variables used for command line parameters
+var (
+	Toke string
+)
+
+/*
+func init() {
+
+	flag.StringVar(&Token, "t", "", "Bot Token")
+	flag.Parse()
+}
+*/
 func main() {
 
-	discord, err := discordgo.New("NEED TOKEN")
-	// if there is an error, we print it to the console
-	if err != nil {
-		fmt.Println("error creating Discord session,", err)
-		return
-	}
+	spotifyConnect("Kasper")
+	/*
+		discord, err := discordgo.New("Bot " + Token)
+		// if there is an error, we print it to the console
+		if err != nil {
+			fmt.Println("error creating Discord session,", err)
+			return
+		}
 
-	discord.AddHandler(messageCreate)
-	// Open a websocket connection to Discord and begin listening.
-	err = discord.Open()
-	if err != nil {
-		fmt.Println("error opening connection,", err)
-		return
-	}
+		discord.AddHandler(messageCreate)
+		// Open a websocket connection to Discord and begin listening.
+		err = discord.Open()
+		if err != nil {
+			fmt.Println("error opening connection,", err)
+			return
+		}
 
-	// Wait here until CTRL-C or other term signal is received.
-	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
-	<-sc
+		// Wait here until CTRL-C or other term signal is received.
+		fmt.Println("Bot is now running.  Press CTRL-C to exit.")
+		sc := make(chan os.Signal, 1)
+		signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+		<-sc
 
-	// Cleanly close down the Discord session.
-	discord.Close()
+		// Cleanly close down the Discord session.
+		discord.Close()
+	*/
 
 }
 
@@ -49,6 +73,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 	// If the message is "ping" reply with "Pong!"
 	if m.Content == "ping" {
+		spotifyConnect("Kasper")
 		s.ChannelMessageSend(m.ChannelID, "Pong!")
 	}
 
@@ -58,24 +83,48 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-// tried to make my own http connection to discord, but seems more complex than first anticipated
-func request() {
+func spotifyConnect(name string) {
 
-	fmt.Println("Start api call")
-
+	//Creating a client to make a http call
 	client := &http.Client{}
 
-	req, err := http.NewRequest("GET", "https://discordapp.com/api/v6", nil)
-	// ...
-	req.Header.Set("Authorization", "Bot ")
+	//Creating data values to get the format application/x-www-form-urlencoded
+	data := url.Values{}
+	data.Set("grant_type", "client_credentials")
+	t := spotify{}
+	//Creating a http reqeust and formats the data
+	req, err := http.NewRequest("POST", "https://accounts.spotify.com/api/token", strings.NewReader(data.Encode()))
 
-	req.Header.Set("Content-Type", "application/json")
-	// TODO: Make a configurable static variable.
-	req.Header.Set("User-Agent", "https://github.com/Kvetter/discord-go-bot")
+	//Setting headers and encrypting the client and secret
+	req.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte("")))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	//Making the http call
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println(*resp)
+
+	readJson(resp.Body, &t)
+
+	//Printing out the body
+
+
+	fmt.Println(t.Key)
+
+}
+
+func readJson ([]byte body, interface *t)  {
+	bodyBytes, err := ioutil.ReadAll(body)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	err2 := json.Unmarshal([]byte(bodyBytes), &t)
+	if err2 != nil {
+		fmt.Println(err2)
+		return
+	}
 }
