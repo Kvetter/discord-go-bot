@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -91,12 +92,12 @@ func spotifyConnect(name string) {
 	//Creating data values to get the format application/x-www-form-urlencoded
 	data := url.Values{}
 	data.Set("grant_type", "client_credentials")
-	t := spotify{}
+
 	//Creating a http reqeust and formats the data
 	req, err := http.NewRequest("POST", "https://accounts.spotify.com/api/token", strings.NewReader(data.Encode()))
 
 	//Setting headers and encrypting the client and secret
-	req.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte("")))
+	req.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte("45dddb0ceb7447b38f8391a6831cddca:4a9fd8503df742849c7e175af8a337f8")))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	//Making the http call
@@ -105,26 +106,67 @@ func spotifyConnect(name string) {
 		fmt.Println(err)
 		return
 	}
+	//Reading the body
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		panic(err.Error())
+	}
+	//Unmarshal the json body into our struct spotify
+	s, err3 := readJson([]byte(body))
+	if err3 != nil {
+		fmt.Println("error ", err3)
+	}
 
-	readJson(resp.Body, &t)
+	ans, err4 := getUser("kvettee", s)
+	if err4 != nil {
+		fmt.Println("error ", err4)
+	}
+
+	body2, err := ioutil.ReadAll(ans.Body)
+	if err != nil {
+		panic(err.Error())
+	}
 
 	//Printing out the body
-
-
-	fmt.Println(t.Key)
+	fmt.Println(s)
+	//Printing out the body
+	fmt.Println(string(body2))
 
 }
 
-func readJson ([]byte body, interface *t)  {
-	bodyBytes, err := ioutil.ReadAll(body)
+func readJson(body []byte) (*spotify, error) {
+	t := new(spotify)
+	err2 := json.Unmarshal(body, &t)
+	if err2 != nil {
+		fmt.Println("error ", err2)
+	}
+	return t, err2
+}
+
+func getUser(name string, token *spotify) (*http.Response, error) {
+	//Creating a client to make a http call
+	client := &http.Client{}
+	var buffer bytes.Buffer
+	url := "https://api.spotify.com/v1/users/"
+	buffer.WriteString(url)
+	buffer.WriteString(name)
+	fmt.Println(buffer.String())
+
+	//Creating a http reqeust and formats the data
+	req, err := http.NewRequest("GET", buffer.String(), nil)
 	if err != nil {
 		fmt.Println(err)
-		return
 	}
 
-	err2 := json.Unmarshal([]byte(bodyBytes), &t)
-	if err2 != nil {
-		fmt.Println(err2)
-		return
+	//Setting headers and encrypting the client and secret
+	req.Header.Set("Authorization", "Bearer "+token.Key)
+
+	//Making the http call
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
 	}
+
+	return resp, err
+
 }
